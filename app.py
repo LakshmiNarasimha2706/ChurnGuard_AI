@@ -14,25 +14,20 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Page configuration  (must precede every other Streamlit call)
-# ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="ChurnIQ — Customer Retention Platform",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Design system — single CSS block, no inline styles in Python logic
-# ─────────────────────────────────────────────────────────────────────────────
+
 _CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ── Reset & Base Styles ─────────────────────────────────────────────────── */
+/* ── Reset & Base Styles ─── */
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body,
@@ -60,7 +55,7 @@ html, body,
     gap: 0 !important;
 }
 
-/* ── Cards / Borders / Surfaces ─────────────────────────────────────────── */
+/* ── Cards / Borders / Surfaces ─── */
 /* Target Streamlit's bordered container to render our card design system */
 div[data-testid="stBorderedContainer"] {
     background-color: #111625 !important;
@@ -70,7 +65,7 @@ div[data-testid="stBorderedContainer"] {
     margin-bottom: 1rem !important;
 }
 
-/* ── KPI Card Custom Elements ───────────────────────────────────────────── */
+/* ── KPI Card Custom Elements ── */
 .kpi-header {
     display: flex;
     justify-content: space-between;
@@ -123,7 +118,7 @@ div[data-testid="stBorderedContainer"] {
 .kpi-trend-wrap.up { color: #10B981; }
 .kpi-trend-wrap.down { color: #EF4444; }
 
-/* ── Sidebar Navigation ──────────────────────────────────────────────────── */
+/* ── Sidebar Navigation ─── */
 [data-testid="stSidebar"] {
     background-color: #0A0F1D !important;
     border-right: 1px solid #1C243B !important;
@@ -203,7 +198,7 @@ div[data-testid="stSidebar"] button[data-testid="baseButton-secondary"]:hover {
     color: #FFFFFF !important;
 }
 
-/* ── Form Inputs Override ───────────────────────────────────────────────── */
+/* ── Form Inputs Override ─── */
 div[data-testid="stTextInput"] input,
 div[data-testid="stNumberInput"] input {
     background-color: #111625 !important;
@@ -253,7 +248,7 @@ button[data-testid="baseButton-primary"]:not(div[data-testid="stSidebar"] button
     background-color: #4C50E5 !important;
 }
 
-/* ── Typography & Headings ───────────────────────────────────────────────── */
+/* ── Typography & Headings ─── */
 h1, h2, h3 {
     font-family: 'Inter', sans-serif !important;
     color: #F9FAFB !important;
@@ -283,7 +278,7 @@ h1, h2, h3 {
     border-bottom: 1px solid #1C243B;
 }
 
-/* ── Header Actions ──────────────────────────────────────────────────────── */
+/* ── Header Actions ─── */
 .header-actions {
     display: flex;
     align-items: center;
@@ -322,7 +317,7 @@ h1, h2, h3 {
     user-select: none;
 }
 
-/* ── Progress/Risk Distribution (Dashboard) ─────────────────────────────── */
+/* ── Progress/Risk Distribution (Dashboard) ─── */
 .risk-row {
     display: flex;
     justify-content: space-between;
@@ -369,7 +364,7 @@ h1, h2, h3 {
     text-align: right;
 }
 
-/* ── Prediction Result Custom Badges & Verdict ───────────────────────────── */
+/* ── Prediction Result Custom Badges & Verdict ──── */
 .verdict-wrap {
     margin-bottom: 1.25rem;
 }
@@ -468,7 +463,7 @@ h1, h2, h3 {
     max-width: 240px;
 }
 
-/* ── Auth Page Card Styles ───────────────────────────────────────────────── */
+/* ── Auth Page Card Styles ───── */
 .auth-page-header {
     display: flex;
     flex-direction: column;
@@ -573,19 +568,15 @@ div[data-testid="stAlert"] {
 """
 st.markdown(_CSS, unsafe_allow_html=True)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Session state
-# ─────────────────────────────────────────────────────────────────────────────
+
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "current_page" not in st.session_state:
     st.session_state.current_page = "Dashboard"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Authentication
-# ─────────────────────────────────────────────────────────────────────────────
+
 def _load_users() -> pd.DataFrame:
     for path in [os.path.join("customer_churn_prediction", "user.csv"), "user.csv", "users.csv"]:
         if os.path.exists(path):
@@ -604,9 +595,8 @@ def authenticate(username: str, password: str) -> bool:
     return bcrypt.checkpw(password.encode(), row.iloc[0]["password"].encode())
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Resource loading  (only after authentication)
-# ─────────────────────────────────────────────────────────────────────────────
+
 @st.cache_resource
 def load_ml_resources():
     model = pickle.load(open("churn_model.pkl", "rb"))
@@ -634,10 +624,8 @@ def load_dataset():
     df["TotalCharges"].fillna(df["TotalCharges"].median(), inplace=True)
     return df
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Plotly chart theme
-# ─────────────────────────────────────────────────────────────────────────────
+
 _CHART = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
@@ -662,10 +650,8 @@ def _theme(fig, height: int = 300) -> go.Figure:
     fig.update_layout(**_CHART, height=height)
     return fig
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Reusable primitives
-# ─────────────────────────────────────────────────────────────────────────────
+
 def kpi(label: str, value: str, sub: str = "") -> None:
     sub_html = f'<div class="kpi-sub">{sub}</div>' if sub else ""
     st.markdown(
@@ -694,10 +680,8 @@ def form_group(text: str) -> None:
 def get_opts(label_encoders: dict, field: str, default: list) -> list:
     return list(label_encoders[field].classes_) if field in label_encoders else default
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Login page — centered auth card, no decorative panels, no fake metrics
-# ─────────────────────────────────────────────────────────────────────────────
+
 def render_login() -> None:
     # ── Page-level vertical centering nudge
     st.markdown(
@@ -775,10 +759,8 @@ def render_login() -> None:
 
     st.stop()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Sidebar navigation
-# ─────────────────────────────────────────────────────────────────────────────
+
 def render_sidebar() -> str:
     with st.sidebar:
         st.markdown(
@@ -822,10 +804,8 @@ def render_sidebar() -> str:
 
     return st.session_state.current_page
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Risk config
-# ─────────────────────────────────────────────────────────────────────────────
+
 def _risk(pct: float) -> dict:
     if pct < 30:
         return {
@@ -842,10 +822,8 @@ def _risk(pct: float) -> dict:
         "desc": "High churn probability. Immediate customer success outreach recommended.",
     }
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Contributing factors
-# ─────────────────────────────────────────────────────────────────────────────
+
 def _factors(contract, tenure, tech_support, online_security, internet_service, payment_method):
     neg, pos = [], []
 
@@ -878,11 +856,10 @@ def _factors(contract, tenure, tech_support, online_security, internet_service, 
     return neg, pos
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Page A — Dashboard
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 def render_dashboard(df) -> None:
-    # ── Header: Title, subtitle, and action widgets on the right ─────────────
+    # ── Header: Title, subtitle, and action widgets on the right ────
     h_col1, h_col2, h_col3, h_col4 = st.columns([2.2, 1, 0.7, 0.9])
     with h_col1:
         st.markdown(
@@ -910,7 +887,7 @@ def render_dashboard(df) -> None:
             unsafe_allow_html=True
         )
 
-    # ── KPIs (4 Card Columns) ────────────────────────────────────────────────
+    # ── KPIs (4 Card Columns) ──────────
     k_col1, k_col2, k_col3, k_col4 = st.columns(4)
     with k_col1:
         with st.container(border=True):
@@ -995,7 +972,7 @@ def render_dashboard(df) -> None:
 
     st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 
-    # ── Charts Row 1 (Line & Donut) ──────────────────────────────────────────
+    # ── Charts Row 1 (Line & Donut) ──────
     ch1_l, ch1_r = st.columns(2)
 
     with ch1_l:
@@ -1200,9 +1177,8 @@ def render_dashboard(df) -> None:
             )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Page B — Prediction
-# ─────────────────────────────────────────────────────────────────────────────
+
 def render_prediction(model, label_encoders, feature_columns) -> None:
     # ── Header: Title and user actions ───────────────────────────────────────
     h_col1, h_col2 = st.columns([3, 1])
@@ -1485,9 +1461,8 @@ def render_prediction(model, label_encoders, feature_columns) -> None:
             st.toast("Prediction recorded.")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Page C — History
-# ─────────────────────────────────────────────────────────────────────────────
+
 def render_history() -> None:
     # ── Header: Title and user actions ───────────────────────────────────────
     h_col1, h_col2 = st.columns([3, 1])
@@ -1807,9 +1782,8 @@ def render_settings() -> None:
         st.text_input("Active ML Model Path", value="churn_model.pkl", disabled=True)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Entry point
-# ─────────────────────────────────────────────────────────────────────────────
+
 def main() -> None:
     if not st.session_state.logged_in:
         render_login()
